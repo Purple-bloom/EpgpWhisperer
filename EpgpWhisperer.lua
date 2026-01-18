@@ -17,6 +17,7 @@ local ParseString = function(input)
         end
     end)
     print("|cff00ff00Prio Import Complete!|r")
+    SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio!", "RAID" ,nil , nil);
 end
 
 local ShowImportField = function()
@@ -79,8 +80,14 @@ local bidPriorityOrder = {
 
 function EpgpWhisperer_OnEvent(message, sender)
     if not message or not sender then return end
-
-
+    local prioNotNil = importResult[sender]
+    if prioNotNil == nil then
+        prioNotNil = 0
+    end
+    if string.lower(message) == "prio" then
+        SendChatMessage("Prio for "..sender..": "..importResult[sender], "WHISPER" ,nil ,sender);
+        return
+    end
 
     local lowerMessage = string.lower(message)
     for k, v in pairs(matchTable) do
