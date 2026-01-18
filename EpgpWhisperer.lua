@@ -85,7 +85,7 @@ function EpgpWhisperer_OnEvent(message, sender)
         prioNotNil = 0
     end
     if string.lower(message) == "prio" then
-        SendChatMessage("Prio for "..sender..": "..importResult[sender], "WHISPER" ,nil ,sender);
+        SendChatMessage("Prio for "..sender..": "..prioNotNil, "WHISPER" ,nil ,sender);
         return
     end
 
