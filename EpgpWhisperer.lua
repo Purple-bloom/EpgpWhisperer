@@ -26,7 +26,7 @@ local ShowImportField = function()
         button1 = "Import",
         button2 = "Cancel",
         hasEditBox = true,
-        maxLetters = 10000,
+        maxLetters = 50000,
 
         OnAccept = function()
             local dialog = this:GetParent()
