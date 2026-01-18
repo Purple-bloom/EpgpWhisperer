@@ -17,7 +17,7 @@ local ParseString = function(input)
         end
     end)
     print("|cff00ff00Prio Import Complete!|r")
-    SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio!", "RAID" ,GetDefaultLanguage() , nil);
+    SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio. Whisper \"howto\" to see how to bid after an item is posted.", "RAID" ,GetDefaultLanguage() , nil);
 end
 
 local ShowImportField = function()
@@ -35,11 +35,11 @@ local ShowImportField = function()
             if editBox then
                 local text = editBox:GetText()
                 ParseString(text)
+                editBox:SetText("")
             end
         end,
 
         EditBoxOnEnterPressed = function()
-            -- In this context, 'this' IS the EditBox itself
             local text = this:GetText()
             ParseString(text)
             this:GetParent():Hide()
@@ -52,9 +52,38 @@ local ShowImportField = function()
     StaticPopup_Show("IMPORT_PRIO_INPUT")
 end
 
+local PrintAllPrios = function()
+    local raidMembers = {};
+    for i = 1, GetNumRaidMembers(), 1 do
+        local name = UnitName("raid" .. i);
+        if name and UnitIsConnected("raid"..i) then
+            table.insert(raidMembers, name);
+        end
+    end
+    local printString = ""
+    print(table.concat(raidMembers, ", "))
+    for i, character in pairs(raidMembers) do
+        local prioNotNil = importResult[character]
+        if prioNotNil == nil then
+            prioNotNil = 0
+        end
+        printString = printString..character..":"..prioNotNil.." "
+    end
+    for i=0, string.len(printString), 256 do
+        local currentMax = i+256
+        if currentMax > string.len(printString) then
+            currentMax = string.len(printString)
+        end
+        local msgPart = string.sub(printString, i, i+256)
+        SendChatMessage(msgPart, "RAID" ,GetDefaultLanguage() ,nil);
+    end
+end
 
 SLASH_PRIOIMPORT1 = "/pimp"
 SlashCmdList.PRIOIMPORT = ShowImportField
+
+SLASH_PRIOPRINT1 = "/pap"
+SlashCmdList.PRIOPRINT = PrintAllPrios
 
 -- prio import end
 
@@ -86,6 +115,11 @@ function EpgpWhisperer_OnEvent(message, sender)
     end
     if string.lower(message) == "prio" then
         SendChatMessage("Prio for "..sender..": "..prioNotNil, "WHISPER" ,GetDefaultLanguage() ,sender);
+        return
+    end
+
+    if string.lower(message) == "howto" then
+        SendChatMessage("In order to bid you need to whisper MS LOW, MS MID, MS HIGH to me. The highest prio in the highest bid category wins. There is also OS bids (replace MS with OS when bidding). There is a minimum prio for mid and high bids.", "WHISPER" ,GetDefaultLanguage() ,sender);
         return
     end
 
