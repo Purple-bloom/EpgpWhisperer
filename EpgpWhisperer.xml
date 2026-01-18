@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Frame name="EpgpWhispererFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
         <Size>
-            <AbsDimension x="200" y="300"/>
+            <AbsDimension x="250" y="300"/>
         </Size>
         <Anchors>
             <Anchor point="CENTER"/>
