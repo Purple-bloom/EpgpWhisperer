@@ -17,7 +17,7 @@ local ParseString = function(input)
         end
     end)
     print("|cff00ff00Prio Import Complete!|r")
-    SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio!", "RAID" ,nil , nil);
+    SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio!", "RAID" ,GetDefaultLanguage() , nil);
 end
 
 local ShowImportField = function()
@@ -85,7 +85,7 @@ function EpgpWhisperer_OnEvent(message, sender)
         prioNotNil = 0
     end
     if string.lower(message) == "prio" then
-        SendChatMessage("Prio for "..sender..": "..prioNotNil, "WHISPER" ,nil ,sender);
+        SendChatMessage("Prio for "..sender..": "..prioNotNil, "WHISPER" ,GetDefaultLanguage() ,sender);
         return
     end
 
