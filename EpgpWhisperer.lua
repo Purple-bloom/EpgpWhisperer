@@ -61,14 +61,16 @@ local PrintAllPrios = function()
             table.insert(raidMembers, name);
         end
     end
-    table.sort(raidMembers)
+    table.sort(raidMembers, function(a, b)
+        local prioA = importResult[a] or 0
+        local prioB = importResult[b] or 0
+        return prioA > prioB
+    end)
+
     local printString = ""
     for i, character in pairs(raidMembers) do
-        local prioNotNil = importResult[character]
-        if prioNotNil == nil then
-            prioNotNil = 0
-        end
-        printString = printString..character..":"..prioNotNil.." "
+        local prioNotNil = importResult[character] or 0
+        printString = printString.."<"..character..":"..prioNotNil.."> "
     end
     for i=0, string.len(printString), 256 do
         local currentMax = i+256
@@ -157,7 +159,8 @@ function EpgpWhisperer_OnEvent(message, sender)
     end
 
     if string.lower(message) == "howto" then
-        SendChatMessage("In order to bid you need to whisper MS LOW, MS MID, MS HIGH to me. The highest prio in the highest bid category wins. There is also OS bids (replace MS with OS when bidding). There is a minimum prio for mid and high bids.", "WHISPER" ,GetDefaultLanguage() ,sender);
+        SendChatMessage("In order to bid you need to whisper MS LOW, MS MID or MS HIGH to me. The highest prio in the highest bid category wins, so an MS HIGH will win vs an MS MID even when the player doing the high bid has lower prio.", "WHISPER" ,GetDefaultLanguage() ,sender);
+        SendChatMessage("Prio is calculated by dividing your Effort Points (EP) by your Gear Points (GP) - GP increases for gear you get and EP increases for bosskills, using consumes, being on time etc.", "WHISPER" ,GetDefaultLanguage() ,sender);
         return
     end
 
