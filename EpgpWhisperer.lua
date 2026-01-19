@@ -60,8 +60,8 @@ local PrintAllPrios = function()
             table.insert(raidMembers, name);
         end
     end
+    table.sort(raidMembers)
     local printString = ""
-    print(table.concat(raidMembers, ", "))
     for i, character in pairs(raidMembers) do
         local prioNotNil = importResult[character]
         if prioNotNil == nil then
