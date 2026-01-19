@@ -42,6 +42,7 @@ local ShowImportField = function()
         EditBoxOnEnterPressed = function()
             local text = this:GetText()
             ParseString(text)
+            this:SetText("")
             this:GetParent():Hide()
         end,
 
@@ -79,11 +80,48 @@ local PrintAllPrios = function()
     end
 end
 
+local GetRaidMembers = function()
+    local raidMembers = {};
+    for i = 1, GetNumRaidMembers(), 1 do
+        local name = UnitName("raid" .. i);
+        if name and UnitIsConnected("raid"..i) then
+            table.insert(raidMembers, name);
+        end
+    end
+    table.sort(raidMembers)
+    StaticPopupDialogs["RAIDMEMBERS_OUTPUT"] = {
+        text = "All currently logged in raid members:",
+        button1 = "Okay",
+        button2 = "Cancel",
+        hasEditBox = true,
+        maxLetters = 2000,
+        OnAccept = function()
+            local dialog = this:GetParent()
+            local editBox = getglobal(dialog:GetName().."EditBox")
+            editBox:SetText("")
+        end,
+        EditBoxOnEnterPressed = function()
+            this:SetText("")
+            this:GetParent():Hide()
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+    }
+    local dialog = StaticPopup_Show("RAIDMEMBERS_OUTPUT")
+    dialog.data = table.concat(raidMembers, ", ")
+    local editBox = getglobal(dialog:GetName().."EditBox")
+    editBox:SetText(table.concat(raidMembers, ", "))
+end
+
 SLASH_PRIOIMPORT1 = "/pimp"
 SlashCmdList.PRIOIMPORT = ShowImportField
 
 SLASH_PRIOPRINT1 = "/pap"
 SlashCmdList.PRIOPRINT = PrintAllPrios
+
+SLASH_GETRAID1 = "/getRaidMembers"
+SlashCmdList.GETRAID = GetRaidMembers
 
 -- prio import end
 

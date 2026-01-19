@@ -7,6 +7,8 @@ Supports a prio import and sorting in the format: character1:prio.prio;character
 
 /pap will print all prios of all current raid members in the raid chat
 
+/getRaidMembers will display a popup with an editBox pre-filled with all currently online raid members for easy copying. makes awarding EP very easy.
+
 best used with the epgp webserver + backend server here:
 https://github.com/Purple-bloom/EPGPHelperFrontend
 https://github.com/Purple-bloom/EPGPHelper
