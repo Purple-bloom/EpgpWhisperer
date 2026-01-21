@@ -258,7 +258,7 @@ end
 
 function disableReceive()
     blockChatImport = not blockChatImport
-    print("Raid Import is now "..blockChatImport)
+    print("Block Chat Import is now ".. tostring(blockChatImport))
 end
 
 SLASH_PRIOIMPORT1 = "/pimp"
