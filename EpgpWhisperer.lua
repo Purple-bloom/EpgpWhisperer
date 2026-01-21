@@ -9,6 +9,11 @@ local GetRaidMembers = function()
             table.insert(raidMembers, name);
         end
     end
+    table.sort(raidMembers, function(a, b)
+        local prioA = importResult[a] or 0
+        local prioB = importResult[b] or 0
+        return prioA > prioB
+    end)
     return raidMembers
 end
 
@@ -100,11 +105,6 @@ end
 
 local PrintAllPrios = function()
     local raidMembers = GetRaidMembers()
-    table.sort(raidMembers, function(a, b)
-        local prioA = importResult[a] or 0
-        local prioB = importResult[b] or 0
-        return prioA > prioB
-    end)
 
     local printString = ""
     local maxMsgLen = 256
@@ -149,11 +149,6 @@ end
 
 local ShowPrio = function()
     local raidMembers = GetRaidMembers()
-    table.sort(raidMembers, function(a, b)
-        local prioA = importResult[a] or 0
-        local prioB = importResult[b] or 0
-        return prioA > prioB
-    end)
 
     local text = ""
     for i, character in pairs(raidMembers) do
