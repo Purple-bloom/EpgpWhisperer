@@ -1,5 +1,6 @@
 local data = {}
 local importResult = {}
+local blockChatImport = false
 
 local GetRaidMembers = function()
     local raidMembers = {};
@@ -117,6 +118,9 @@ local PrintAllPrios = function()
             printString = ""
         end
     end
+    if not (printString == "") then
+        SendChatMessage(printString, "RAID" ,GetDefaultLanguage() ,nil);
+    end
 end
 
 local ShowRaidMembers = function()
@@ -189,7 +193,7 @@ end
 
 
 function EpgpWhisperer_OnEvent(event)
-    if (arg1 == "CYDEPGP" and not (arg4 == UnitName("player"))) then
+    if (arg1 == "CYDEPGP" and not (arg4 == UnitName("player")) and not blockChatImport) then
         ImportPriosFromChat(arg2)
         return
     end
@@ -252,6 +256,11 @@ function EpgpWhisperer_ClearEntries()
     EpgpWhispererFrame:Hide()
 end
 
+function disableReceive()
+    blockChatImport = not blockChatImport
+    print("Raid Import is now "..blockChatImport)
+end
+
 SLASH_PRIOIMPORT1 = "/pimp"
 SlashCmdList.PRIOIMPORT = ShowImportField
 
@@ -263,3 +272,6 @@ SlashCmdList.GETRAID = ShowRaidMembers
 
 SLASH_SHOWPRIO1 = "/prio"
 SlashCmdList.SHOWPRIO = ShowPrio
+
+SLASH_DISABLERECEIVE1 = "/blockChatImport"
+SlashCmdList.DISABLERECEIVE = disableReceive
