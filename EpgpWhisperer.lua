@@ -1,10 +1,45 @@
 local data = {}
 local importResult = {}
 
--- hehe prio import = pimp
-local ParseString = function(input)
+local GetRaidMembers = function()
+    local raidMembers = {};
+    for i = 1, GetNumRaidMembers(), 1 do
+        local name = UnitName("raid" .. i);
+        if name and UnitIsConnected("raid"..i) then
+            table.insert(raidMembers, name);
+        end
+    end
+    return raidMembers
+end
+
+local PropagatePrios = function()
+    local raidMembers = GetRaidMembers()
+    local priosToSend = {}
+    for i, character in pairs(raidMembers) do
+        priosToSend[character] = importResult[character] or 0
+    end
+
+    local msgToSend = ""
+    for character, prio in pairs(priosToSend) do
+        msgToSend = msgToSend..character..":"..prio..";"
+    end
+
+    local maxMsgLen = 256
+    local bufferLen = 30
+    local msg = ""
+    for i=0, string.len(msgToSend), 1 do
+        local currentChar = string.sub(msgToSend, i, i)
+        msg = msg..currentChar
+        if((string.len(msg)>200 and currentChar == ';') or string.len(msg) >= string.len(msgToSend)) then
+            print("Sending addon message")
+            SendAddonMessage("CYDEPGP", msg, "RAID", nil)
+            msg = ""
+        end
+    end
+end
+
+local ImportPriosFromString = function(input)
     importResult = {}
-    local count = 0
     string.gsub(input, "([^;]+)", function(segment)
         local _, _, namesPart, prioPart = string.find(segment, "(.-):(.+)")
 
@@ -12,12 +47,22 @@ local ParseString = function(input)
             string.gsub(namesPart, "([^,]+)", function(name)
                 local cleanName = string.gsub(name, "%s+", "")
                 importResult[cleanName] = tonumber(prioPart)
-                count = count + 1
             end)
         end
     end)
     print("|cff00ff00Prio Import Complete!|r")
     SendChatMessage("New prios imported. Whisper \"prio\" to get a reply with your prio. Whisper \"howto\" to see how to bid after an item is posted.", "RAID" ,GetDefaultLanguage() , nil);
+    PropagatePrios()
+end
+
+local ImportPriosFromChat = function(input)
+    string.gsub(input, "([^;]+)", function(segment)
+        local _, _, namesPart, prioPart = string.find(segment, "(.-):(.+)")
+        if namesPart and prioPart then
+            importResult[namesPart] = tonumber(prioPart)
+        end
+    end)
+    print("|cff00ff00New (partial) prio update received and imported.|r")
 end
 
 local ShowImportField = function()
@@ -34,14 +79,14 @@ local ShowImportField = function()
 
             if editBox then
                 local text = editBox:GetText()
-                ParseString(text)
+                ImportPriosFromString(text)
                 editBox:SetText("")
             end
         end,
 
         EditBoxOnEnterPressed = function()
             local text = this:GetText()
-            ParseString(text)
+            ImportPriosFromString(text)
             this:SetText("")
             this:GetParent():Hide()
         end,
@@ -54,13 +99,7 @@ local ShowImportField = function()
 end
 
 local PrintAllPrios = function()
-    local raidMembers = {};
-    for i = 1, GetNumRaidMembers(), 1 do
-        local name = UnitName("raid" .. i);
-        if name and UnitIsConnected("raid"..i) then
-            table.insert(raidMembers, name);
-        end
-    end
+    local raidMembers = GetRaidMembers()
     table.sort(raidMembers, function(a, b)
         local prioA = importResult[a] or 0
         local prioB = importResult[b] or 0
@@ -68,28 +107,20 @@ local PrintAllPrios = function()
     end)
 
     local printString = ""
+    local maxMsgLen = 256
+    local bufferLen = 30 -- to ensure we dont hit char limit with next string (dont judge me im lazy)
     for i, character in pairs(raidMembers) do
         local prioNotNil = importResult[character] or 0
         printString = printString.."<"..character..":"..prioNotNil.."> "
-    end
-    for i=0, string.len(printString), 256 do
-        local currentMax = i+256
-        if currentMax > string.len(printString) then
-            currentMax = string.len(printString)
+        if string.len(printString) >= maxMsgLen-bufferLen then
+            SendChatMessage(printString, "RAID" ,GetDefaultLanguage() ,nil);
+            printString = ""
         end
-        local msgPart = string.sub(printString, i, i+256)
-        SendChatMessage(msgPart, "RAID" ,GetDefaultLanguage() ,nil);
     end
 end
 
-local GetRaidMembers = function()
-    local raidMembers = {};
-    for i = 1, GetNumRaidMembers(), 1 do
-        local name = UnitName("raid" .. i);
-        if name and UnitIsConnected("raid"..i) then
-            table.insert(raidMembers, name);
-        end
-    end
+local ShowRaidMembers = function()
+    local raidMembers = GetRaidMembers()
     table.sort(raidMembers)
     StaticPopupDialogs["RAIDMEMBERS_OUTPUT"] = {
         text = "All currently logged in raid members:",
@@ -116,17 +147,26 @@ local GetRaidMembers = function()
     editBox:SetText(table.concat(raidMembers, ", "))
 end
 
-SLASH_PRIOIMPORT1 = "/pimp"
-SlashCmdList.PRIOIMPORT = ShowImportField
+local ShowPrio = function()
+    local raidMembers = GetRaidMembers()
+    table.sort(raidMembers, function(a, b)
+        local prioA = importResult[a] or 0
+        local prioB = importResult[b] or 0
+        return prioA > prioB
+    end)
 
-SLASH_PRIOPRINT1 = "/pap"
-SlashCmdList.PRIOPRINT = PrintAllPrios
+    local text = ""
+    for i, character in pairs(raidMembers) do
+        local prioNotNil = importResult[character] or 0
+        text = text..character..": "..prioNotNil.."\n"
+    end
+    PrioText:SetText(text)
+    PrioFrame:Show()
+end
 
-SLASH_GETRAID1 = "/getRaidMembers"
-SlashCmdList.GETRAID = GetRaidMembers
-
--- prio import end
-
+function Prio_Hide()
+    PrioFrame:Hide()
+end
 
 local matchTable = {
     ["ms low"] = "MS LOW", ["low"] = "MS LOW", ["min"] = "MS LOW", ["ms min"] = "MS LOW",
@@ -147,13 +187,23 @@ local bidPriorityOrder = {
     ["OS LOW"] = 6,
 }
 
-function EpgpWhisperer_OnEvent(message, sender)
-    if not message or not sender then return end
-    local prioNotNil = importResult[sender]
-    if prioNotNil == nil then
-        prioNotNil = 0
+function EpgpWhisperer_OnLoad()
+    this:RegisterEvent("CHAT_MSG_ADDON")
+    this:RegisterEvent("CHAT_MSG_WHISPER")
+end
+
+
+function EpgpWhisperer_OnEvent(event)
+    if (arg1 == "CYDEPGP" and not (arg4 == UnitName("player"))) then
+        ImportPriosFromChat(arg2)
+        return
     end
+
+    local message = arg1
+    local sender = arg2
+
     if string.lower(message) == "prio" then
+        local prioNotNil = importResult[sender] or 0
         SendChatMessage("Prio for "..sender..": "..prioNotNil, "WHISPER" ,GetDefaultLanguage() ,sender);
         return
     end
@@ -184,7 +234,7 @@ function EpgpWhisperer_UpdateWindow()
         table.insert(sortedEntries, {name = player, bidPriority = bidPriority, prio = importedPrio})
     end
 
-    -- Sort based on custom order
+    -- Sort based on bid and then prio
     table.sort(sortedEntries, function(a, b)
         if a.bidPriority == b.bidPriority then
             return a.prio > b.prio
@@ -206,3 +256,15 @@ function EpgpWhisperer_ClearEntries()
     EpgpWhispererText:SetText("")
     EpgpWhispererFrame:Hide()
 end
+
+SLASH_PRIOIMPORT1 = "/pimp"
+SlashCmdList.PRIOIMPORT = ShowImportField
+
+SLASH_PRIOPRINT1 = "/pap"
+SlashCmdList.PRIOPRINT = PrintAllPrios
+
+SLASH_GETRAID1 = "/getRaidMembers"
+SlashCmdList.GETRAID = ShowRaidMembers
+
+SLASH_SHOWPRIO1 = "/prio"
+SlashCmdList.SHOWPRIO = ShowPrio
