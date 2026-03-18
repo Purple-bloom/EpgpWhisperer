@@ -1,4 +1,59 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!-- Template for rows in the bid frame -->
+    <Frame name="RowTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="230" y="25"/>
+        </Size>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" inherits="GameFontNormal">
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset><AbsDimension x="5" y="0"/></Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentBid" inherits="GameFontNormal">
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset><AbsDimension x="60" y="0"/></Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentPrio" inherits="GameFontNormal">
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset><AbsDimension x="120" y="0"/></Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentAwardButton" inherits="UIPanelButtonTemplate" text="WIN">
+                <Size><AbsDimension x="60" y="20"/></Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset x="-5" y="0"/>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local parent = this:GetParent();
+
+                        if (parent.playerName) then
+                            EpgpWhisperer_Award(parent.playerName);
+                        else
+                            DEFAULT_CHAT_FRAME:AddMessage("Error: No player name found on this row!");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+
+
+    <!-- Main Frame for receiving whispers -->
     <Frame name="EpgpWhispererFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
         <Size>
             <AbsDimension x="250" y="300"/>
@@ -6,6 +61,19 @@
         <Anchors>
             <Anchor point="CENTER"/>
         </Anchors>
+
+        <Layers>
+            <Layer level="OVERLAY">
+                <FontString name="EpgpWhispererTitle" inherits="GameFontNormalSmall" text="No Item Selected">
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset x="0" y="-10"/>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+
         <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
                   edgeFile="Interface\DialogFrame\UI-DialogBox-Border"
                   tile="true">
@@ -40,17 +108,6 @@
             </Button>
         </Frames>
 
-        <Layers>
-            <Layer level="ARTWORK">
-                <FontString name="EpgpWhispererText" inherits="GameFontNormal" justifyH="LEFT">
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset><AbsDimension x="10" y="-10"/></Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-            </Layer>
-        </Layers>
         <Scripts>
             <OnLoad>
                 EpgpWhisperer_OnLoad();
@@ -68,6 +125,7 @@
         </Scripts>
     </Frame>
 
+    <!-- /prio table: -->
     <Frame name="PrioFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
         <Size>
             <AbsDimension x="200" y="300"/>
@@ -132,4 +190,105 @@
             </OnDragStop>
         </Scripts>
     </Frame>
+
+    <Frame name="EpgpLootTrigger" parent="UIParent">
+        <Scripts>
+            <OnLoad>
+                this:RegisterEvent("LOOT_OPENED");
+            </OnLoad>
+            <OnEvent>
+                EpgpWhisperer_OnLootOpen();
+            </OnEvent>
+        </Scripts>
+    </Frame>
+
+    <Frame name="EpgpLootInteractFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
+        <Size>
+            <AbsDimension x="250" y="300"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
+                  edgeFile="Interface\DialogFrame\UI-DialogBox-Border"
+                  tile="true">
+            <EdgeSize>
+                <AbsValue val="16"/>
+            </EdgeSize>
+            <TileSize>
+                <AbsValue val="32"/>
+            </TileSize>
+            <BackgroundInsets>
+                <AbsInset left="5" right="5" top="5" bottom="5"/>
+            </BackgroundInsets>
+        </Backdrop>
+
+        <Layers>
+            <Layer level="OVERLAY">
+                <FontString name="EpgpWhispererTitle" inherits="GameFontNormalSmall" text="LOOT">
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset x="0" y="-10"/>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+
+        <Frames>
+            <Button inherits="UIPanelButtonTemplate" name="ItemFrameCloseButton" parent="EpgpLootInteractFrame" text="CLOSE">
+                <Size><AbsDimension x="80" y="22"/></Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset x="-4" y="5"/>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        EpgpWhisperer_CloseItemFrame();
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+
+        <Scripts>
+            <OnLoad>
+                this:RegisterForDrag("LeftButton");
+            </OnLoad>
+            <OnDragStart>
+                this:StartMoving();
+            </OnDragStart>
+            <OnDragStop>
+                this:StopMovingOrSizing();
+            </OnDragStop>
+        </Scripts>
+    </Frame>
+
+    <Button name="EpgpLootItemTemplate" virtual="true">
+        <Size><AbsDimension x="230" y="30"/></Size>
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture name="$parentIcon">
+                    <Size><AbsDimension x="24" y="24"/></Size>
+                    <Anchors><Anchor point="LEFT"><Offset x="5" y="0"/></Anchor></Anchors>
+                </Texture>
+                <FontString name="$parentText" inherits="GameFontNormalSmall" justifyH="LEFT">
+                    <Size><AbsDimension x="130" y="24"/></Size>
+                    <Anchors><Anchor point="LEFT"><Offset x="34" y="0"/></Anchor></Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentBidButton" inherits="UIPanelButtonTemplate" text="BID">
+                <Size><AbsDimension x="50" y="20"/></Size>
+                <Anchors><Anchor point="RIGHT"><Offset x="-5" y="0"/></Anchor></Anchors>
+                <Scripts>
+                    <OnClick>
+                        local parent = this:GetParent();
+                        EpgpWhisperer_StartBidding(parent.itemSlot, parent.itemLink, parent.itemName);
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Button>
 </Ui>

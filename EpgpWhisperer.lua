@@ -1,6 +1,9 @@
-local data = {}
-local importResult = {}
-local blockChatImport = false
+local receivedBids = {}; -- tracking all received bids until list is cleared
+local bidFrames = {}; -- tracking bidFrames in the bid window
+local importResult = {}; -- results of prio import
+local blockChatImport = false; -- block other people from messing with ur shit
+local currentItemLink = nil; -- this value tracks which item is being bid on globally
+local gpExport = ""; -- continually added to for gp award info. reset when item bid window is closed
 
 local GetRaidMembers = function()
     local raidMembers = {};
@@ -145,10 +148,10 @@ local ShowRaidMembers = function()
         whileDead = true,
         hideOnEscape = true,
     }
-    local dialog = StaticPopup_Show("RAIDMEMBERS_OUTPUT")
-    dialog.data = table.concat(raidMembers, ", ")
-    local editBox = getglobal(dialog:GetName().."EditBox")
-    editBox:SetText(table.concat(raidMembers, ", "))
+    local dialog = StaticPopup_Show("RAIDMEMBERS_OUTPUT");
+    dialog.data = table.concat(raidMembers, ", ");
+    local editBox = getglobal(dialog:GetName().."EditBox");
+    editBox:SetText(table.concat(raidMembers, ", "));
 end
 
 local ShowPrio = function()
@@ -213,11 +216,37 @@ function EpgpWhisperer_OnEvent(event)
         return
     end
 
-    local lowerMessage = string.lower(message)
-    for k, v in pairs(matchTable) do
-        if string.find(lowerMessage, "^" .. k) then
-            data[sender] = v
-            EpgpWhisperer_UpdateWindow()
+    local whisperLowercase = string.lower(message)
+    for bidWhispered, bidValue in pairs(matchTable) do
+        if string.find(whisperLowercase, "^" .. bidWhispered) then
+            -- This is the part where we received a valid bid
+            receivedBids[sender] = bidValue;
+
+            local importedPrio = importResult[sender];
+            if importedPrio == nil then
+                importedPrio = 0;
+            end
+
+            local rowName = "BidRow"..sender;
+            local row;
+            if bidFrames[sender] == nil then
+                row = CreateFrame("Frame", rowName, EpgpWhispererFrame, "RowTemplate");
+            else
+                row = bidFrames[sender]
+            end
+
+            row.playerName = sender; -- this attrib is used for announcing the winner / saving the playerName to the row regardless of the text
+            row.nameText = getglobal(rowName.."Name");
+            row.bidText  = getglobal(rowName.."Bid");
+            row.prioText  = getglobal(rowName.."Prio");
+            row.awardButton = getglobal(rowName.."AwardButton");
+
+            row.nameText:SetText(sender);
+            row.bidText:SetText(bidValue..":");
+            row.prioText:SetText(importedPrio);
+
+            bidFrames[sender] = row;
+            EpgpWhisperer_UpdateWindow();
             return
         end
     end
@@ -225,7 +254,7 @@ end
 
 function EpgpWhisperer_UpdateWindow()
     local sortedEntries = {}
-    for player, bidPriority in pairs(data) do
+    for player, bidPriority in pairs(receivedBids) do
         local importedPrio = importResult[player]
         if importedPrio == nil then
             importedPrio = 0
@@ -241,18 +270,126 @@ function EpgpWhisperer_UpdateWindow()
         return bidPriorityOrder[a.bidPriority] < bidPriorityOrder[b.bidPriority]
     end)
 
-    -- Update window text with sorted entries
-    local text = ""
+    local rowOffset = 20;
+    local rowPostion = -30;
     for _, character in ipairs(sortedEntries) do
-        text = text .. character.name .. " - " .. character.bidPriority .. " - " .. character.prio .. "\n"
+        local rowFrame = bidFrames[character.name]
+        rowFrame:SetPoint("TOPLEFT", EpgpWhispererFrame, "TOPLEFT", 10, rowPostion);
+        rowFrame:Show();
+        rowPostion = rowPostion - rowOffset
     end
-    EpgpWhispererText:SetText(text)
-    EpgpWhispererFrame:Show()
+
+    EpgpWhispererFrame:Show();
+end
+
+function EpgpWhisperer_Award(playerName)
+    print(playerName)
+    local bidTier = receivedBids[playerName];
+    local prioNotNil = importResult[playerName] or 0;
+    SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
+    gpExport = gpExport .. playerName .. "," .. bidTier .. "," .. currentItemLink .. ";"
+end
+
+local lootRows = {};
+
+function EpgpWhisperer_StartBidding(slot, link, name)
+    SendChatMessage("BID NOW FOR "..link, "RAID_WARNING" ,GetDefaultLanguage() , nil);
+
+    local title = getglobal("EpgpWhispererTitle");
+    if title then
+        title:SetText("Bidding: " .. link);
+    end
+
+    currentItemLink = link;
+end
+
+function EpgpWhisperer_CreateLootRow(slotIndex, itemName, itemTexture, itemLink, displayIndex)
+    local f = lootRows[displayIndex];
+
+    if not f then
+        f = CreateFrame("Button", "EpgpLootRow"..displayIndex, EpgpLootInteractFrame, "EpgpLootItemTemplate");
+        table.insert(lootRows, f);
+    end
+    f:ClearAllPoints();
+    if displayIndex == 1 then
+        f:SetPoint("TOPLEFT", EpgpLootInteractFrame, "TOPLEFT", 10, -35);
+    else
+        f:SetPoint("TOPLEFT", lootRows[displayIndex-1], "BOTTOMLEFT", 0, -5);
+    end
+
+    f.itemSlot = slotIndex;
+    f.itemLink = itemLink;
+    f.itemName = itemName;
+
+    getglobal(f:GetName().."Text"):SetText(itemLink or itemName);
+    getglobal(f:GetName().."Icon"):SetTexture(itemTexture);
+
+    f:Show();
+end
+
+function EpgpWhisperer_OnLootOpen()
+    local numItems = GetNumLootItems();
+    if numItems > 0 then
+        local method, masterlooterPartyID = GetLootMethod();
+        if (method == "master" and masterlooterPartyID == 0) then
+
+            EpgpWhisperer_HideAllItemRows();
+
+            local displayCount = 0;
+            for i = 1, numItems do
+                local texture, name, qty, quality = GetLootSlotInfo(i);
+                if not LootSlotIsCoin(i) then
+                    local link = GetLootSlotLink(i);
+
+
+                    if quality >= 3 then
+                        displayCount = displayCount + 1;
+                        EpgpWhisperer_CreateLootRow(i, name, texture, link, displayCount);
+                    end
+                end
+            end
+            if displayCount > 0 then
+                EpgpLootInteractFrame:Show();
+            end
+        end
+    end
+end
+
+function EpgpWhisperer_HideAllItemRows()
+    for _, frame in ipairs(lootRows) do
+        frame:Hide();
+    end
+end
+
+function EpgpWhisperer_CloseItemFrame()
+    EpgpLootInteractFrame:Hide();
+    EpgpWhisperer_HideAllItemRows();
+
+    if gpExport ~= "" then
+        StaticPopupDialogs["EPGP_EXPORT_COPY"] = {
+            text = "Press Ctrl+C to copy the GP Export data:",
+            button1 = "Okay",
+            button2 = "Cancel",
+            hasEditBox = true,
+            maxLetters = 2000,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        local dialog = StaticPopup_Show("EPGP_EXPORT_COPY");
+        dialog.data = gpExport;
+        local editBox = getglobal(dialog:GetName().."EditBox");
+        editBox:SetText(gpExport);
+    end
+
+    gpExport = ""
 end
 
 function EpgpWhisperer_ClearEntries()
-    data = {}
-    EpgpWhispererText:SetText("")
+    receivedBids = {}
+    for player, rowFrame in pairs(bidFrames) do
+        rowFrame:Hide();
+    end
     EpgpWhispererFrame:Hide()
 end
 
