@@ -282,15 +282,44 @@ function EpgpWhisperer_UpdateWindow()
     EpgpWhispererFrame:Show();
 end
 
+-- LOOT WINDOW
+
+local lootRows = {};
+local activeLoot = {};
+
 function EpgpWhisperer_Award(playerName)
     print(playerName)
     local bidTier = receivedBids[playerName];
     local prioNotNil = importResult[playerName] or 0;
     SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
     gpExport = gpExport .. playerName .. "," .. bidTier .. "," .. currentItemLink .. ";"
+
+    for i, rowFrame in ipairs(lootRows) do
+        if rowFrame.itemLink == currentItemLink then
+            table.remove(activeLoot, i);
+            break
+        end
+    end
+
+    EpgpWhisperer_ClearEntries();
+    EpgpWhisperer_RefreshLootList();
 end
 
-local lootRows = {};
+function EpgpWhisperer_RefreshLootList()
+    EpgpWhisperer_HideAllItemRows();
+
+    local displayCount = table.getn(activeLoot);
+    if displayCount == 0 then
+        EpgpWhisperer_CloseItemFrame(); -- Auto-close and show export if last item is gone
+        return
+    end
+
+    for i, itemData in ipairs(activeLoot) do
+        CreateLootRow(itemData.slot, itemData.name, itemData.tex, itemData.link, i);
+    end
+
+    EpgpLootInteractFrame:Show();
+end
 
 function EpgpWhisperer_StartBidding(slot, link, name)
     SendChatMessage("BID NOW FOR "..link, "RAID_WARNING" ,GetDefaultLanguage() , nil);
@@ -303,7 +332,7 @@ function EpgpWhisperer_StartBidding(slot, link, name)
     currentItemLink = link;
 end
 
-function EpgpWhisperer_CreateLootRow(slotIndex, itemName, itemTexture, itemLink, displayIndex)
+function CreateLootRow(slotIndex, itemName, itemTexture, itemLink, displayIndex)
     local f = lootRows[displayIndex];
 
     if not f then
@@ -328,6 +357,7 @@ function EpgpWhisperer_CreateLootRow(slotIndex, itemName, itemTexture, itemLink,
 end
 
 function EpgpWhisperer_OnLootOpen()
+    activeLoot = {};
     local numItems = GetNumLootItems();
     if numItems > 0 then
         local method, masterlooterPartyID = GetLootMethod();
@@ -344,7 +374,8 @@ function EpgpWhisperer_OnLootOpen()
 
                     if quality >= 3 then
                         displayCount = displayCount + 1;
-                        EpgpWhisperer_CreateLootRow(i, name, texture, link, displayCount);
+                        CreateLootRow(i, name, texture, link, displayCount);
+                        table.insert(activeLoot, {slot=displayCount, name=name, tex=texture, link=link});
                     end
                 end
             end
