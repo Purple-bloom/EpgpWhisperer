@@ -3,6 +3,7 @@ local bidFrames = {}; -- tracking bidFrames in the bid window
 local importResult = {}; -- results of prio import
 local blockChatImport = false; -- block other people from messing with ur shit
 local currentItemLink = nil; -- this value tracks which item is being bid on globally
+local currentItemName = nil; -- this value tracks which item is being bid on globally
 local gpExport = ""; -- continually added to for gp award info. reset when item bid window is closed
 
 local GetRaidMembers = function()
@@ -292,7 +293,7 @@ function EpgpWhisperer_Award(playerName)
     local bidTier = receivedBids[playerName];
     local prioNotNil = importResult[playerName] or 0;
     SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
-    gpExport = gpExport .. playerName .. "|" .. bidTier .. "|" .. currentItemLink .. ";"
+    gpExport = gpExport .. playerName .. "|" .. bidTier .. "|" .. currentItemName .. ";"
 
     for i, rowFrame in ipairs(lootRows) do
         if rowFrame.itemLink == currentItemLink then
@@ -330,6 +331,7 @@ function EpgpWhisperer_StartBidding(slot, link, name)
     end
 
     currentItemLink = link;
+    currentItemName = name;
 end
 
 function CreateLootRow(slotIndex, itemName, itemTexture, itemLink, displayIndex)
