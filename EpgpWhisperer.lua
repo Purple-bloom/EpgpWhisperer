@@ -293,7 +293,7 @@ function EpgpWhisperer_Award(playerName)
     local bidTier = receivedBids[playerName];
     local prioNotNil = importResult[playerName] or 0;
     SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
-    gpExport = gpExport .. playerName .. "|" .. bidTier .. "|" .. currentItemName .. ";"
+    gpExport = gpExport .. playerName .. "--" .. bidTier .. "--" .. currentItemName .. ";"
 
     for i, rowFrame in ipairs(lootRows) do
         if rowFrame.itemLink == currentItemLink then
