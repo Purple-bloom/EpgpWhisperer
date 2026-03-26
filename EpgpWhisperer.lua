@@ -302,7 +302,6 @@ function EpgpWhisperer_Award(playerName)
         end
     end
 
-    EpgpWhisperer_ClearEntries();
     EpgpWhisperer_RefreshLootList();
 end
 

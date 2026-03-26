@@ -236,7 +236,7 @@
         </Layers>
 
         <Frames>
-            <Button inherits="UIPanelButtonTemplate" name="ItemFrameCloseButton" parent="EpgpLootInteractFrame" text="CLOSE">
+            <Button inherits="UIPanelButtonTemplate" name="ItemFrameCloseButton" parent="EpgpLootInteractFrame" text="GP EXPORT">
                 <Size><AbsDimension x="80" y="22"/></Size>
                 <Anchors>
                     <Anchor point="BOTTOMRIGHT">
