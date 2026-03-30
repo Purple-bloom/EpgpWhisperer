@@ -5,6 +5,7 @@ local blockChatImport = false; -- block other people from messing with ur shit
 local currentItemLink = nil; -- this value tracks which item is being bid on globally
 local currentItemName = nil; -- this value tracks which item is being bid on globally
 local gpExport = ""; -- continually added to for gp award info. reset when item bid window is closed
+local lastGpExport = ""; -- kept for /gpexport
 
 local GetRaidMembers = function()
     local raidMembers = {};
@@ -212,8 +213,9 @@ function EpgpWhisperer_OnEvent(event)
     end
 
     if string.lower(message) == "howto" then
-        SendChatMessage("In order to bid you need to whisper MS LOW, MS MID or MS HIGH to me. The highest prio in the highest bid category wins, so an MS HIGH will win vs an MS MID even when the player doing the high bid has lower prio.", "WHISPER" ,GetDefaultLanguage() ,sender);
-        SendChatMessage("Prio is calculated by dividing your Effort Points (EP) by your Gear Points (GP) - GP increases for gear you get and EP increases for bosskills, using consumes, being on time etc.", "WHISPER" ,GetDefaultLanguage() ,sender);
+        SendChatMessage("EPGP works by awarding items based on Prio. Prio is calculated by dividing your Effort Points (EP) by your Gear Points (GP) - GP increases for gear you get and EP increases for bosskills, using consumes, being on time etc.", "WHISPER" ,GetDefaultLanguage() ,sender);
+        SendChatMessage("In order to bid you need to whisper MS LOW, MS MID or MS HIGH to me. Alternatively you can Whisper OS LOW, OS MID or OS HIGH for offspec bids.", "WHISPER" ,GetDefaultLanguage() ,sender);
+        SendChatMessage("The highest prio in the highest bid category wins, so an MS HIGH will win vs an MS MID even when the player doing the high bid has lower prio, as long as the bid isn't downgraded.", "WHISPER" ,GetDefaultLanguage() ,sender);
         return
     end
 
@@ -289,7 +291,6 @@ local lootRows = {};
 local activeLoot = {};
 
 function EpgpWhisperer_Award(playerName)
-    print(playerName)
     local bidTier = receivedBids[playerName];
     local prioNotNil = importResult[playerName] or 0;
     SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
@@ -413,8 +414,8 @@ function EpgpWhisperer_CloseItemFrame()
         local editBox = getglobal(dialog:GetName().."EditBox");
         editBox:SetText(gpExport);
     end
-
-    gpExport = ""
+    lastGpExport = gpExport;
+    gpExport = "";
 end
 
 function EpgpWhisperer_ClearEntries()
@@ -428,6 +429,25 @@ end
 function disableReceive()
     blockChatImport = not blockChatImport
     print("Block Chat Import is now ".. tostring(blockChatImport))
+end
+
+function slashShowGpExport()
+    if lastGpExport ~= "" then
+        StaticPopupDialogs["EPGP_EXPORT_COPY"] = {
+            text = "Press Ctrl+C to copy the GP Export data:",
+            button1 = "Okay",
+            button2 = "Cancel",
+            hasEditBox = true,
+            maxLetters = 2000,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        local dialog = StaticPopup_Show("EPGP_EXPORT_COPY");
+        dialog.data = lastGpExport;
+        local editBox = getglobal(dialog:GetName().."EditBox");
+        editBox:SetText(lastGpExport);
+    end
 end
 
 SLASH_PRIOIMPORT1 = "/pimp"
@@ -444,3 +464,6 @@ SlashCmdList.SHOWPRIO = ShowPrio
 
 SLASH_DISABLERECEIVE1 = "/blockChatImport"
 SlashCmdList.DISABLERECEIVE = disableReceive
+
+SLASH_GPEXPORT1 = "/gpexport"
+SlashCmdList.GPEXPORT = slashShowGpExport
