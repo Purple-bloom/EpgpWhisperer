@@ -374,7 +374,7 @@ function CydEpgp_OnLootOpen()
                     local link = GetLootSlotLink(i);
 
 
-                    if quality >= 0 then
+                    if quality >= 3 then -- quality is rarity
                         displayCount = displayCount + 1;
                         CreateLootRow(i, name, texture, link, displayCount);
                         table.insert(activeLoot, {slot=displayCount, name=name, tex=texture, link=link});
@@ -450,17 +450,17 @@ function slashShowGpExport()
     end
 end
 
-function showHelp()
-    print("/pimp - prio import using format [characterName:prio;characterName2:prio2;...]")
-    print("/pap print all prios of people currently in your raid")
-    print("/getRaidMembers print list of all Characters currently in raid")
-    print("/prio display window with prio of all people in raid (very scuffed)")
-    print("/blockChatImport blocks other installations of this addon in the same raid from sending you an import via /pimp")
-    print("/gpexport shows you the gp export text window again if you closed it too early accidentally")
+local ShowHelp = function()
+    print("/pimp --- prio import using format [characterName:prio;characterName2:prio2;...]")
+    print("/pap --- print all prios of people currently in your raid")
+    print("/getRaidMembers --- print list of all Characters currently in raid")
+    print("/prio --- display window with prio of all people in raid (very scuffed)")
+    print("/blockChatImport --- blocks other installations of this addon in the same raid from sending you an import via /pimp")
+    print("/gpexport --- shows you the gp export text window again if you closed it too early accidentally")
 end
 
 SLASH_CYDEPGPHELP1 = "/cydEpgp"
-SlashCmdList.HELP = ShowHelp
+SlashCmdList.CYDEPGPHELP = ShowHelp
 
 SLASH_PRIOIMPORT1 = "/pimp"
 SlashCmdList.PRIOIMPORT = ShowImportField
