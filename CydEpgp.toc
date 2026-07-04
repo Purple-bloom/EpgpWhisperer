@@ -1,0 +1,6 @@
+## Interface: 30300
+## Title: CydEpgp
+## Notes: Tracks MS/OS whispers and shows priority info.
+## Version: 1.0
+CydEpgp.lua
+CydEpgp.xml

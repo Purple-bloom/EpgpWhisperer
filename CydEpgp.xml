@@ -42,7 +42,7 @@
                         local parent = this:GetParent();
 
                         if (parent.playerName) then
-                            EpgpWhisperer_Award(parent.playerName);
+                            CydEpgp_Award(parent.playerName);
                         else
                             DEFAULT_CHAT_FRAME:AddMessage("Error: No player name found on this row!");
                         end
@@ -54,7 +54,7 @@
 
 
     <!-- Main Frame for receiving whispers -->
-    <Frame name="EpgpWhispererFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
+    <Frame name="CydEpgpFrame" hidden="true" movable="true" enableMouse="true" frameStrata="DIALOG">
         <Size>
             <AbsDimension x="250" y="300"/>
         </Size>
@@ -64,7 +64,7 @@
 
         <Layers>
             <Layer level="OVERLAY">
-                <FontString name="EpgpWhispererTitle" inherits="GameFontNormalSmall" text="No Item Selected">
+                <FontString name="CydEpgpTitle" inherits="GameFontNormalSmall" text="No Item Selected">
                     <Anchors>
                         <Anchor point="TOP">
                             <Offset x="0" y="-10"/>
@@ -89,7 +89,7 @@
         </Backdrop>
 
         <Frames>
-            <Button inherits="UIPanelButtonTemplate" name="EpgpWhispererCloseButton" parent="EpgpWhispererFrame" text="CLEAR LIST">
+            <Button inherits="UIPanelButtonTemplate" name="CydEpgpCloseButton" parent="CydEpgpFrame" text="CLEAR LIST">
                 <Size><AbsDimension x="80" y="22"/></Size>
                 <Anchors>
                     <Anchor point="BOTTOMRIGHT">
@@ -102,7 +102,7 @@
                 </Text>
                 <Scripts>
                     <OnClick>
-                        EpgpWhisperer_ClearEntries();
+                        CydEpgp_ClearEntries();
                     </OnClick>
                 </Scripts>
             </Button>
@@ -110,11 +110,11 @@
 
         <Scripts>
             <OnLoad>
-                EpgpWhisperer_OnLoad();
+                CydEpgp_OnLoad();
                 this:RegisterForDrag("LeftButton");
             </OnLoad>
             <OnEvent>
-                EpgpWhisperer_OnEvent();
+                CydEpgp_OnEvent();
             </OnEvent>
             <OnDragStart>
                 this:StartMoving();
@@ -197,7 +197,7 @@
                 this:RegisterEvent("LOOT_OPENED");
             </OnLoad>
             <OnEvent>
-                EpgpWhisperer_OnLootOpen();
+                CydEpgp_OnLootOpen();
             </OnEvent>
         </Scripts>
     </Frame>
@@ -225,7 +225,7 @@
 
         <Layers>
             <Layer level="OVERLAY">
-                <FontString name="EpgpWhispererTitle" inherits="GameFontNormalSmall" text="LOOT">
+                <FontString name="CydEpgpTitle" inherits="GameFontNormalSmall" text="LOOT">
                     <Anchors>
                         <Anchor point="TOP">
                             <Offset x="0" y="-10"/>
@@ -245,7 +245,7 @@
                 </Anchors>
                 <Scripts>
                     <OnClick>
-                        EpgpWhisperer_CloseItemFrame();
+                        CydEpgp_CloseItemFrame();
                     </OnClick>
                 </Scripts>
             </Button>
@@ -285,7 +285,7 @@
                 <Scripts>
                     <OnClick>
                         local parent = this:GetParent();
-                        EpgpWhisperer_StartBidding(parent.itemSlot, parent.itemLink, parent.itemName);
+                        CydEpgp_StartBidding(parent.itemSlot, parent.itemLink, parent.itemName);
                     </OnClick>
                 </Scripts>
             </Button>

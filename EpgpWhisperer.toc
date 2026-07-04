@@ -1,6 +1,0 @@
-## Interface: 11200
-## Title: EpgpWhisperer
-## Notes: Tracks MS/OS whispers and shows priority info.
-## Version: 1.0
-EpgpWhisperer.lua
-EpgpWhisperer.xml

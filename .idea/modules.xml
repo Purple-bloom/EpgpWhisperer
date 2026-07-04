@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/EpgpWhisperer.iml" filepath="$PROJECT_DIR$/.idea/EpgpWhisperer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/CydEpgp.iml" filepath="$PROJECT_DIR$/.idea/CydEpgp.iml" />
     </modules>
   </component>
 </project>

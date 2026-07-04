@@ -191,13 +191,13 @@ local bidPriorityOrder = {
     ["OS LOW"] = 6,
 }
 
-function EpgpWhisperer_OnLoad()
+function CydEpgp_OnLoad()
     this:RegisterEvent("CHAT_MSG_ADDON")
     this:RegisterEvent("CHAT_MSG_WHISPER")
 end
 
 
-function EpgpWhisperer_OnEvent(event)
+function CydEpgp_OnEvent(event)
     if (arg1 == "CYDEPGP" and not (arg4 == UnitName("player")) and not blockChatImport) then
         ImportPriosFromChat(arg2)
         return
@@ -233,7 +233,7 @@ function EpgpWhisperer_OnEvent(event)
             local rowName = "BidRow"..sender;
             local row;
             if bidFrames[sender] == nil then
-                row = CreateFrame("Frame", rowName, EpgpWhispererFrame, "RowTemplate");
+                row = CreateFrame("Frame", rowName, CydEpgpFrame, "RowTemplate");
             else
                 row = bidFrames[sender]
             end
@@ -249,13 +249,13 @@ function EpgpWhisperer_OnEvent(event)
             row.prioText:SetText(importedPrio);
 
             bidFrames[sender] = row;
-            EpgpWhisperer_UpdateWindow();
+            CydEpgp_UpdateWindow();
             return
         end
     end
 end
 
-function EpgpWhisperer_UpdateWindow()
+function CydEpgp_UpdateWindow()
     local sortedEntries = {}
     for player, bidPriority in pairs(receivedBids) do
         local importedPrio = importResult[player]
@@ -277,12 +277,12 @@ function EpgpWhisperer_UpdateWindow()
     local rowPostion = -30;
     for _, character in ipairs(sortedEntries) do
         local rowFrame = bidFrames[character.name]
-        rowFrame:SetPoint("TOPLEFT", EpgpWhispererFrame, "TOPLEFT", 10, rowPostion);
+        rowFrame:SetPoint("TOPLEFT", CydEpgpFrame, "TOPLEFT", 10, rowPostion);
         rowFrame:Show();
         rowPostion = rowPostion - rowOffset
     end
 
-    EpgpWhispererFrame:Show();
+    CydEpgpFrame:Show();
 end
 
 -- LOOT WINDOW
@@ -290,7 +290,7 @@ end
 local lootRows = {};
 local activeLoot = {};
 
-function EpgpWhisperer_Award(playerName)
+function CydEpgp_Award(playerName)
     local bidTier = receivedBids[playerName];
     local prioNotNil = importResult[playerName] or 0;
     SendChatMessage(playerName.." receives "..currentItemLink.." for "..bidTier.." with a current prio of "..prioNotNil..".", "RAID_WARNING" ,GetDefaultLanguage() , nil);
@@ -303,15 +303,15 @@ function EpgpWhisperer_Award(playerName)
         end
     end
 
-    EpgpWhisperer_RefreshLootList();
+    CydEpgp_RefreshLootList();
 end
 
-function EpgpWhisperer_RefreshLootList()
-    EpgpWhisperer_HideAllItemRows();
+function CydEpgp_RefreshLootList()
+    CydEpgp_HideAllItemRows();
 
     local displayCount = table.getn(activeLoot);
     if displayCount == 0 then
-        EpgpWhisperer_CloseItemFrame(); -- Auto-close and show export if last item is gone
+        CydEpgp_CloseItemFrame(); -- Auto-close and show export if last item is gone
         return
     end
 
@@ -322,10 +322,10 @@ function EpgpWhisperer_RefreshLootList()
     EpgpLootInteractFrame:Show();
 end
 
-function EpgpWhisperer_StartBidding(slot, link, name)
+function CydEpgp_StartBidding(slot, link, name)
     SendChatMessage("BID NOW FOR "..link, "RAID_WARNING" ,GetDefaultLanguage() , nil);
 
-    local title = getglobal("EpgpWhispererTitle");
+    local title = getglobal("CydEpgpTitle");
     if title then
         title:SetText("Bidding: " .. link);
     end
@@ -358,14 +358,14 @@ function CreateLootRow(slotIndex, itemName, itemTexture, itemLink, displayIndex)
     f:Show();
 end
 
-function EpgpWhisperer_OnLootOpen()
+function CydEpgp_OnLootOpen()
     activeLoot = {};
     local numItems = GetNumLootItems();
     if numItems > 0 then
         local method, masterlooterPartyID = GetLootMethod();
         if (method == "master" and masterlooterPartyID == 0) then
 
-            EpgpWhisperer_HideAllItemRows();
+            CydEpgp_HideAllItemRows();
 
             local displayCount = 0;
             for i = 1, numItems do
@@ -374,7 +374,7 @@ function EpgpWhisperer_OnLootOpen()
                     local link = GetLootSlotLink(i);
 
 
-                    if quality >= 3 then
+                    if quality >= 0 then
                         displayCount = displayCount + 1;
                         CreateLootRow(i, name, texture, link, displayCount);
                         table.insert(activeLoot, {slot=displayCount, name=name, tex=texture, link=link});
@@ -388,15 +388,15 @@ function EpgpWhisperer_OnLootOpen()
     end
 end
 
-function EpgpWhisperer_HideAllItemRows()
+function CydEpgp_HideAllItemRows()
     for _, frame in ipairs(lootRows) do
         frame:Hide();
     end
 end
 
-function EpgpWhisperer_CloseItemFrame()
+function CydEpgp_CloseItemFrame()
     EpgpLootInteractFrame:Hide();
-    EpgpWhisperer_HideAllItemRows();
+    CydEpgp_HideAllItemRows();
 
     if gpExport ~= "" then
         StaticPopupDialogs["EPGP_EXPORT_COPY"] = {
@@ -418,17 +418,17 @@ function EpgpWhisperer_CloseItemFrame()
     gpExport = "";
 end
 
-function EpgpWhisperer_ClearEntries()
+function CydEpgp_ClearEntries()
     receivedBids = {}
     for player, rowFrame in pairs(bidFrames) do
         rowFrame:Hide();
     end
-    EpgpWhispererFrame:Hide()
+    CydEpgpFrame:Hide()
 end
 
 function disableReceive()
     blockChatImport = not blockChatImport
-    print("Block Chat Import is now ".. tostring(blockChatImport))
+    print("Prio importing from other addons is now ".. tostring(blockChatImport))
 end
 
 function slashShowGpExport()
@@ -449,6 +449,18 @@ function slashShowGpExport()
         editBox:SetText(lastGpExport);
     end
 end
+
+function showHelp()
+    print("/pimp - prio import using format [characterName:prio;characterName2:prio2;...]")
+    print("/pap print all prios of people currently in your raid")
+    print("/getRaidMembers print list of all Characters currently in raid")
+    print("/prio display window with prio of all people in raid (very scuffed)")
+    print("/blockChatImport blocks other installations of this addon in the same raid from sending you an import via /pimp")
+    print("/gpexport shows you the gp export text window again if you closed it too early accidentally")
+end
+
+SLASH_CYDEPGPHELP1 = "/cydEpgp"
+SlashCmdList.HELP = ShowHelp
 
 SLASH_PRIOIMPORT1 = "/pimp"
 SlashCmdList.PRIOIMPORT = ShowImportField
